@@ -1,0 +1,110 @@
+{
+    "id": "762973b2-ca04-42b6-a4e0-2bd2875b1fab",
+    "name": "5k run",
+    "reward": "20$",
+    "tasks": [
+        {
+            "id": "fb55dc7f-2dea-414f-9c27-cd5decb85d55",
+            "name": "Start",
+            "points": 0,
+            "dependencies": null
+        },
+        {
+            "id": "ae6b1cfd-32dc-4cd7-aab0-9efbd245ef65",
+            "name": "train for 1k",
+            "points": 10,
+            "dependencies": [
+                "Start"
+            ]
+        },
+        {
+            "id": "01e19d33-fbbe-4dd9-ae30-a3b9e1323639",
+            "name": "train for 2k",
+            "points": 20,
+            "dependencies": [
+                "train for 1k"
+            ]
+        },
+        {
+            "id": "5df097f5-3aac-4d7a-8628-693eddd0b4ee",
+            "name": "train for 3k",
+            "points": 30,
+            "dependencies": [
+                "train for 2k"
+            ]
+        },
+        {
+            "id": "90669283-a8b9-4095-8490-c353e39bfb95",
+            "name": "train for 4k",
+            "points": 40,
+            "dependencies": [
+                "train for 3k",
+                "train for 0.3k"
+            ]
+        },
+        {
+            "id": "678c5a64-be80-4723-8f03-e51a751d9051",
+            "name": "train for 5k",
+            "points": 50,
+            "dependencies": [
+                "train for 4k"
+            ]
+        },
+        {
+            "id": "5afd5ea6-2dc4-4907-9465-53481f1e3d1e",
+            "name": "train for 2k",
+            "points": 80,
+            "dependencies": [
+                "Start"
+            ]
+        },
+        {
+            "id": "c6330535-84a7-47ab-b353-6c422f6c157a",
+            "name": "train for 4k",
+            "points": 120,
+            "dependencies": [
+                "train for 2k"
+            ]
+        },
+        {
+            "id": "9ec0957d-90e1-4848-90bf-a6554b4d8e85",
+            "name": "train for 5k",
+            "points": 50,
+            "dependencies": [
+                "train for 4k"
+            ]
+        },
+        {
+            "id": "227bcfb0-a297-4710-b3bb-36be255e4b84",
+            "name": "train for 0.33k",
+            "points": 10,
+            "dependencies": [
+                "train for 3k"
+            ]
+        },
+        {
+            "id": "65d218d7-6c8a-450d-9d46-4f59334fc094",
+            "name": "train for 0.37k",
+            "points": 10,
+            "dependencies": [
+                "train for 0.33k"
+            ]
+        },
+        {
+            "id": "621eb392-ae8e-4302-af4e-91e85f3419b0",
+            "name": "train for 0.3k",
+            "points": 10,
+            "dependencies": [
+                "train for 0.37k"
+            ]
+        },
+        {
+            "id": "47a2c557-fc46-42f4-a217-e66c48284312",
+            "name": "finish",
+            "points": 1,
+            "dependencies": [
+                "train for 5k"
+            ]
+        }
+    ]
+}
