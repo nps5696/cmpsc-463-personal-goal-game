@@ -1,14 +1,14 @@
 import json
-import uuid
 import tkinter as tk
-import numpy as np
+import uuid
 from tkinter import simpledialog, messagebox, StringVar, filedialog
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from game_ui import run_game
-import threading
 
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from game_ui import run_game
 
 graph_window = None
 canvas = None
@@ -16,28 +16,26 @@ ax = None
 
 
 class Task:
-    def __init__(self, name, points, completed=False, dependencies=[]):
+    def __init__(self, name, points, dependencies=[], completed=False):
         self.id = str(uuid.uuid4())  # Generate a unique ID
         self.name = name
         self.points = points
-        self.completed = False
         self.dependencies = dependencies
-
+        self.completed = completed
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'points': self.points,
-            'completed': self.completed,
-            'dependencies': self.dependencies
+            'dependencies': self.dependencies,
+            'completed': self.completed
         }
 
     @staticmethod
     def from_dict(data):
-        task = Task(data['name'], data['points'], data['completed'], data['dependencies'])
-        #task.id = data['id']
-        #task.completed = data['completed']
+        task = Task(data['name'], data['points'], data['dependencies'], data['completed'])
+        task.id = data['id']
         return task
 
 
@@ -71,7 +69,6 @@ class Goal:
 
         for task_data in data['tasks']:
             goal.add_task(Task.from_dict(task_data))
-            # print("taks data: ", str(Task.from_dict(task_data).dependencies))
         return goal
 
 
@@ -109,59 +106,44 @@ def load_goal_from():
         return load_goal(filename)
 
 
-def build_graph(goal):
-    # Create a directed graph using NetworkX
-    graph = nx.DiGraph()
-
-    # Add nodes based on tasks
-    for task in goal.tasks:
-        graph.add_node(task.id, name=task.name, points=task.points, completed=task.completed, dependencies=task.dependencies)
-        print(task.id, task.name, task.points, task.completed, task.dependencies, "\n")
-
-    # Add edges based on tasks and their dependencies
-    for task in goal.tasks:
-        # if task.dependencies:
-        #     for dep_uuid in task.dependencies:
-        #         dep_task = next((t for t in goal.tasks if t.id == dep_uuid), None)
-        #         if dep_task:
-        #             graph.add_edge(dep_task.id, task.id, weight=task.points, task_name=task.name)
-        #             print("adding dependency to task:", task.id, dep_task.id, task.name, task.points)
-
-        if task.dependencies:
-            # edge_weight = task.points
-            for dep in task.dependencies:
-                graph.add_edge(task.id, dep, weight=task.points, task_name=task.name)
-                print("adding dependency to task:", task.id, dep, task.name, task.points)
-                # graph.add_edge(dep, task.id, weight=task.points, name=task.name)
-                # print(graph.edges)
-
-    # Print nodes with attributes
-    print("Nodes total:", len(graph.nodes()))
-    for node, data in graph.nodes(data=True):
-        name = data.get('name', 'Unknown')
-        print(f"{node} ({name})")
-
-    return graph
-
 
 def draw_graph(goal, ax, path):
-    # Build the graph
-    graph = build_graph(goal)
-
-    print("graph.edges:", graph.edges())
     # Clear the axes for the new plot
     ax.clear()
 
-    # Draw the graph
-    print(graph.nodes())
-    pos = nx.spring_layout(graph)
-    nx.draw(graph, pos, with_labels=True, font_weight='bold', node_size=1000, node_color='skyblue')
-    node_labels = nx.get_node_attributes(graph, 'name')
-    nx.draw_networkx_labels(graph, pos, labels=node_labels)
+    # Create a directed graph using NetworkX
+    graph = nx.DiGraph()
 
+    # Add nodes and edges based on tasks and their dependencies
+    for task in goal.tasks:
+        graph.add_node(task.name)
+        if task.dependencies:
+            for dep in task.dependencies:
+                graph.add_edge(dep, task.name)
+
+    # Check if "Start" and "Finish" nodes exist
+    if any(task.name == "Start" for task in goal.tasks) and any(task.name == "Finish" for task in goal.tasks):
+        print("HERE!")
+        # Generate default positions for all nodes, then adjust "Start" and "Finish"
+        pos = nx.spring_layout(graph)
+        pos['Start'] = np.array([0, 0.5])  # Place "Start" on the left
+        pos['Finish'] = np.array([1, 0.5])  # Place "Finish" on the right
+    else:
+        # If "Start" or "Finish" do not exist, use the default layout
+        pos = nx.spring_layout(graph)
+
+
+    # Draw the graph on the axes
+    # pos = nx.spring_layout(G)
+    # nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=2000, font_size=15, ax=ax)
+
+    # Clear the existing plot
+    ax.clear()
+
+    # Draw the graph
+    nx.draw(graph, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=2000, font_size=10, ax=ax)
     print("path:", path)
     if path:
-        ax.clear()
         # Highlight the shortest path
         path_edges = list(zip(path, path[1:]))
         nx.draw_networkx_edges(graph, pos, edgelist=path_edges, edge_color='red', width=2, ax=ax)
@@ -195,17 +177,13 @@ def add_task(goals):
     if task_name:
         task_points = simpledialog.askinteger("Task Points", "Enter the points for this task:")
         if task_points is not None:
-
-            # Create a dictionary to map task names to UUIDs
-            task_name_to_uuid = {task.name: task.id for task in goals.tasks}
-
             # Open the task dependency window after entering task points
             def on_dependency_selected():
                 task_prereq = task_var.get()
                 if task_prereq != "Select Prerequisite Task":
-                    print("task_name_to_uuid[task_prereq]:", task_name_to_uuid[task_prereq])
-                    new_task = Task(task_name, task_points, False, [task_name_to_uuid[task_prereq]])
+                    new_task = Task(task_name, task_points, [task_prereq])
                     goals.add_task(new_task)
+                    task_window.destroy()
                     messagebox.showinfo("Task Added", f"Task '{task_name}' added successfully!")
                     task_window.destroy()
                 else:
@@ -214,13 +192,10 @@ def add_task(goals):
             task_window = tk.Toplevel()
             task_window.title("Update Task Dependency")
 
-
             # Dropdown for selecting a task
             task_var = StringVar(task_window)
             task_var.set("Select Prerequisite Task")
-            #task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goals.tasks])
-            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + list(task_name_to_uuid.keys()))
-
+            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goals.tasks])
             task_menu.pack()
 
             # Button to confirm the selection
@@ -310,8 +285,9 @@ def edit_task_dependency(goal):
         selected_task = next((task for task in goal.tasks if task.name == selected_task_name), None)
         if selected_task:
             selected_task.dependencies.append(selected_prereq_name)
-            messagebox.showinfo("Task Updated", f"Prerequisite '{selected_prereq_name}' added to Task '{selected_task_name}'")
             edit_window.destroy()
+            messagebox.showinfo("Task Updated", f"Prerequisite '{selected_prereq_name}' added to Task '{selected_task_name}'")
+            #edit_window.destroy()
 
     edit_window = tk.Toplevel()
     edit_window.title("Edit Task Dependencies")
@@ -392,6 +368,7 @@ def calculate_path(goal, graph_window):
         show_graph(goal, graph_window, path)
         return path
     else:
+        messagebox.showinfo("Finish Task Required", "Finish task has not been set. Please create 'Finish' task.")
         raise ValueError("Start or Finish node not present in the graph")
 
 
@@ -410,9 +387,44 @@ def main():
     label = tk.Label(root, text="")
     label.pack()
 
-    def display_string():
+    def display_manual():
+        formatted_text = """
+        Welcome to the Personal Achievement Game!
+    
+        Follow these steps to play:
+    
+        1. Start by creating a new goal:
+           - Click on 'Add Goal' button.
+           - Enter the goal name and reward.
+    
+        2. Add tasks to the goal:
+           - Click on 'Add Task' button.
+           - Enter the task name and points.
+    
+        3. Set task dependencies:
+           - Click on 'Edit Task Dependency' to specify which tasks need to be completed before others.
+           - Select a task and its prerequisite from the dropdown menus.
+    
+        4. Save your goal:
+           - Click on 'Save Goal' to save your progress.
+    
+        5. Calculate the optimal path:
+           - Click on 'Calculate Path' to find the shortest path from the start to finish tasks.
+    
+        6. Play the game:
+           - Click on 'Play Game' to start the game and complete tasks in the specified order.
+    
+        7. Show progress:
+           - Click on 'Show Progress' to see the progress of completed tasks.
+    
+        Have fun achieving your goals!
+        """
+
         # Update the label's text when the button is clicked
-        label.config(text="Hello There!")
+        label.config(text="Gameplay Manual")
+        text_label = tk.Label(root, text=formatted_text, justify="left", anchor="w", font=("Arial", 12), padx=10, pady=10)
+        text_label.pack()
+
 
     def start_game_and_close_root(root, goals):
         if len(goals) == 0:
@@ -422,20 +434,20 @@ def main():
         run_game(goals[-1])  # Start the Pygame game
 
     # Add buttons and bind them to their respective functions
-    tk.Button(button_frame, text="Add Goal", command=lambda: add_goal(goals), width=button_width).pack()
-    tk.Button(button_frame, text="Add Task", command=lambda: add_task(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Show Progress", command=lambda: display_progress(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Calculate Path", command=lambda: calculate_path(goals[-1] if goals else None, root), width=button_width).pack()
-    # tk.Button(button_frame, text="Update Goal", command=lambda: update_goal(goals), width=button_width).pack()
-    tk.Button(button_frame, text="Show Tasks Graph", command=lambda: show_graph(goals[-1] if goals else None, root), width=button_width).pack()
+    tk.Button(button_frame, text="Show Manual", font=tk.font.Font(size=20), command=display_manual, width=button_width).pack()
+    tk.Button(button_frame, text="Add Goal", font=tk.font.Font(size=20), command=lambda: add_goal(goals), width=button_width).pack()
+    tk.Button(button_frame, text="Add Task", font=tk.font.Font(size=20), command=lambda: add_task(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Show Progress", font=tk.font.Font(size=20), command=lambda: display_progress(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Calculate Path", font=tk.font.Font(size=20), command=lambda: calculate_path(goals[-1] if goals else None, root), width=button_width).pack()
+    tk.Button(button_frame, text="Show Tasks Graph", font=tk.font.Font(size=20), command=lambda: show_graph(goals[-1] if goals else None, root), width=button_width).pack()
     # Add Save and Load buttons
-    tk.Button(button_frame, text="Save Goal", command=lambda: save_goal_as(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Load Goal", command=lambda: goals.append(load_goal_from()), width=button_width).pack()
-    tk.Button(button_frame, text="Click to display string", command=display_string, width=button_width).pack()
-    tk.Button(button_frame, text="Edit Task Dependency", command=lambda: edit_task_dependency(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Play Game", command=lambda: start_game_and_close_root(root, goals), width=button_width).pack()
+    tk.Button(button_frame, text="Save Goal", font=tk.font.Font(size=20), command=lambda: save_goal_as(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Load Goal", font=tk.font.Font(size=20), command=lambda: goals.append(load_goal_from()), width=button_width).pack()
 
+    tk.Button(button_frame, text="Edit Task Dependency", font=tk.font.Font(size=20), command=lambda: edit_task_dependency(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Play Game", font=tk.font.Font(size=20), command=lambda: start_game_and_close_root(root, goals), width=button_width).pack()
 
+    display_manual()
     root.mainloop()
 
 

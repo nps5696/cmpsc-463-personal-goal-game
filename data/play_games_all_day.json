@@ -1,0 +1,60 @@
+{
+    "id": "4e65c18b-d535-4601-9f3f-539e7b1691a7",
+    "name": "play games all day",
+    "reward": "100$",
+    "tasks": [
+        {
+            "id": "d87d1566-4cef-4d4f-a1da-65a4363cd7e5",
+            "name": "Start",
+            "points": 0,
+            "dependencies": [],
+            "completed": false
+        },
+        {
+            "id": "0ca56d98-bbd5-4925-acd3-87881d85e4ec",
+            "name": "wake up at 8am",
+            "points": 100,
+            "dependencies": [
+                "Start"
+            ],
+            "completed": false
+        },
+        {
+            "id": "56be2c39-2467-4b43-9779-256b3108936d",
+            "name": "wake up at 10am",
+            "points": 50,
+            "dependencies": [
+                "Start"
+            ],
+            "completed": false
+        },
+        {
+            "id": "b8406ba7-577e-470a-bf5d-2e7e04573c23",
+            "name": "play games for 3h",
+            "points": 80,
+            "dependencies": [
+                "wake up at 8am"
+            ],
+            "completed": false
+        },
+        {
+            "id": "20decff9-a954-42e3-a084-979316a1beac",
+            "name": "play games for 1h",
+            "points": 10,
+            "dependencies": [
+                "wake up at 10am"
+            ],
+            "completed": false
+        },
+        {
+            "id": "11b03007-840a-4a51-9fdb-66325c255372",
+            "name": "Finish",
+            "points": 0,
+            "dependencies": [
+                "play games for 3h",
+                "play games for 1h"
+            ],
+            "completed": false
+        }
+    ]
+}
