@@ -447,7 +447,7 @@ def main():
     tk.Button(button_frame, text="Edit Task Dependency", font=tk.font.Font(size=20), command=lambda: edit_task_dependency(goals[-1] if goals else None), width=button_width).pack()
     tk.Button(button_frame, text="Play Game", font=tk.font.Font(size=20), command=lambda: start_game_and_close_root(root, goals), width=button_width).pack()
 
-    display_manual()
+    #display_manual()
     root.mainloop()
 
 
