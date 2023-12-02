@@ -7,9 +7,9 @@ import math
 
 def run_game(goals):
 
-    def get_next_task(goals):
+    def get_next_tasks(goals):
         for task in goals.tasks:
-            if task.completed == False:
+            if task.completed is not False:
                 return task.name
 
     ####
@@ -18,7 +18,9 @@ def run_game(goals):
     pygame.mixer.init()
 
     # Set up the display
-    screen = pygame.display.set_mode((800, 600))
+    width = 800
+    hight = 600
+    screen = pygame.display.set_mode((width, hight))
 
     # Setup sounds
     button_click_sound = pygame.mixer.Sound("sounds/click.mp3")
@@ -45,11 +47,12 @@ def run_game(goals):
     popups = []
     popup_animating = False
     animation_step = 0
+    score = 0
 
     # Function to draw a circular button
     def draw_button():
         pygame.draw.circle(screen, BLUE, circle_center, circle_radius)
-        text = font.render('Task:' + get_next_task(goals), True, WHITE)
+        text = font.render('Task:' + get_next_tasks(goals), True, WHITE)
         text_rect = text.get_rect(center=circle_center)
         screen.blit(text, text_rect)
 
@@ -76,6 +79,16 @@ def run_game(goals):
     running = True
     draw_button()
     while running:
+
+        current_time = pygame.time.get_ticks()
+
+        ## Get current time in milliseconds
+        #current_time = pygame.time.get_ticks() - start_time
+
+        # Convert milliseconds to seconds
+        seconds = current_time // 1000
+        milliseconds = current_time % 1000
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -93,6 +106,18 @@ def run_game(goals):
                         if rect.collidepoint(event.pos):
                             print(f"{popup_options[popups.index(rect)]} clicked!")
 
+        # Render and display "GAME is ON" at the top center
+        game_on_text = font.render("GAME is ON", True, (255, 0, 0))
+        game_on_rect = game_on_text.get_rect(center=(width // 2, 30))
+        screen.blit(game_on_text, game_on_rect)
+
+        score_text = font.render(f"Score: {score}", True, (255, 255, 0))
+        screen.blit(score_text, (10, 50))
+
+        # Render and display current time with milliseconds below the score
+        time_text = font.render(f"Time: {seconds} s {milliseconds} ms", True, (255, 255, 0))
+        screen.blit(time_text, (10, 80))
+
         if popup_animating:
             screen.fill((0, 0, 0))  # Clear screen
             draw_button()
@@ -102,5 +127,7 @@ def run_game(goals):
                 popup_animating = False
 
         pygame.display.flip()
+
+        pygame.time.Clock().tick(60)
 
 pygame.quit()

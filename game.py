@@ -16,25 +16,28 @@ ax = None
 
 
 class Task:
-    def __init__(self, name, points, dependencies=[]):
+    def __init__(self, name, points, completed=False, dependencies=[]):
         self.id = str(uuid.uuid4())  # Generate a unique ID
         self.name = name
         self.points = points
-        self.dependencies = dependencies
         self.completed = False
+        self.dependencies = dependencies
+
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'points': self.points,
+            'completed': self.completed,
             'dependencies': self.dependencies
         }
 
     @staticmethod
     def from_dict(data):
-        task = Task(data['name'], data['points'], data['dependencies'])
-        task.id = data['id']
+        task = Task(data['name'], data['points'], data['completed'], data['dependencies'])
+        #task.id = data['id']
+        #task.completed = data['completed']
         return task
 
 
@@ -68,6 +71,7 @@ class Goal:
 
         for task_data in data['tasks']:
             goal.add_task(Task.from_dict(task_data))
+            # print("taks data: ", str(Task.from_dict(task_data).dependencies))
         return goal
 
 
@@ -105,44 +109,59 @@ def load_goal_from():
         return load_goal(filename)
 
 
-
-def draw_graph(goal, ax, path):
-    # Clear the axes for the new plot
-    ax.clear()
-
+def build_graph(goal):
     # Create a directed graph using NetworkX
     graph = nx.DiGraph()
 
-    # Add nodes and edges based on tasks and their dependencies
+    # Add nodes based on tasks
     for task in goal.tasks:
-        graph.add_node(task.name)
+        graph.add_node(task.id, name=task.name, points=task.points, completed=task.completed, dependencies=task.dependencies)
+        print(task.id, task.name, task.points, task.completed, task.dependencies, "\n")
+
+    # Add edges based on tasks and their dependencies
+    for task in goal.tasks:
+        # if task.dependencies:
+        #     for dep_uuid in task.dependencies:
+        #         dep_task = next((t for t in goal.tasks if t.id == dep_uuid), None)
+        #         if dep_task:
+        #             graph.add_edge(dep_task.id, task.id, weight=task.points, task_name=task.name)
+        #             print("adding dependency to task:", task.id, dep_task.id, task.name, task.points)
+
         if task.dependencies:
+            # edge_weight = task.points
             for dep in task.dependencies:
-                graph.add_edge(dep, task.name)
+                graph.add_edge(task.id, dep, weight=task.points, task_name=task.name)
+                print("adding dependency to task:", task.id, dep, task.name, task.points)
+                # graph.add_edge(dep, task.id, weight=task.points, name=task.name)
+                # print(graph.edges)
 
-    # Check if "Start" and "Finish" nodes exist
-    if any(task.name == "Start" for task in goal.tasks) and any(task.name == "Finish" for task in goal.tasks):
-        print("HERE!")
-        # Generate default positions for all nodes, then adjust "Start" and "Finish"
-        pos = nx.spring_layout(graph)
-        pos['Start'] = np.array([0, 0.5])  # Place "Start" on the left
-        pos['Finish'] = np.array([1, 0.5])  # Place "Finish" on the right
-    else:
-        # If "Start" or "Finish" do not exist, use the default layout
-        pos = nx.spring_layout(graph)
+    # Print nodes with attributes
+    print("Nodes total:", len(graph.nodes()))
+    for node, data in graph.nodes(data=True):
+        name = data.get('name', 'Unknown')
+        print(f"{node} ({name})")
+
+    return graph
 
 
-    # Draw the graph on the axes
-    # pos = nx.spring_layout(G)
-    # nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=2000, font_size=15, ax=ax)
+def draw_graph(goal, ax, path):
+    # Build the graph
+    graph = build_graph(goal)
 
-    # Clear the existing plot
+    print("graph.edges:", graph.edges())
+    # Clear the axes for the new plot
     ax.clear()
 
     # Draw the graph
-    nx.draw(graph, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=2000, font_size=10, ax=ax)
+    print(graph.nodes())
+    pos = nx.spring_layout(graph)
+    nx.draw(graph, pos, with_labels=True, font_weight='bold', node_size=1000, node_color='skyblue')
+    node_labels = nx.get_node_attributes(graph, 'name')
+    nx.draw_networkx_labels(graph, pos, labels=node_labels)
+
     print("path:", path)
     if path:
+        ax.clear()
         # Highlight the shortest path
         path_edges = list(zip(path, path[1:]))
         nx.draw_networkx_edges(graph, pos, edgelist=path_edges, edge_color='red', width=2, ax=ax)
@@ -176,11 +195,16 @@ def add_task(goals):
     if task_name:
         task_points = simpledialog.askinteger("Task Points", "Enter the points for this task:")
         if task_points is not None:
+
+            # Create a dictionary to map task names to UUIDs
+            task_name_to_uuid = {task.name: task.id for task in goals.tasks}
+
             # Open the task dependency window after entering task points
             def on_dependency_selected():
                 task_prereq = task_var.get()
                 if task_prereq != "Select Prerequisite Task":
-                    new_task = Task(task_name, task_points, [task_prereq])
+                    print("task_name_to_uuid[task_prereq]:", task_name_to_uuid[task_prereq])
+                    new_task = Task(task_name, task_points, False, [task_name_to_uuid[task_prereq]])
                     goals.add_task(new_task)
                     messagebox.showinfo("Task Added", f"Task '{task_name}' added successfully!")
                     task_window.destroy()
@@ -190,10 +214,13 @@ def add_task(goals):
             task_window = tk.Toplevel()
             task_window.title("Update Task Dependency")
 
+
             # Dropdown for selecting a task
             task_var = StringVar(task_window)
             task_var.set("Select Prerequisite Task")
-            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goal.tasks])
+            #task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goals.tasks])
+            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + list(task_name_to_uuid.keys()))
+
             task_menu.pack()
 
             # Button to confirm the selection

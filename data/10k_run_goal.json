@@ -1,0 +1,32 @@
+{
+    "id": "51a64f25-835e-499f-8f5e-a9a96c34c608",
+    "name": "run 10k",
+    "reward": "100$",
+    "tasks": [
+        {
+            "id": "eb8fa1bc-5191-42e6-90c2-d795a2727071",
+            "name": "Start",
+            "points": 0,
+            "completed": false,
+            "dependencies": []
+        },
+        {
+            "id": "c45e5c1b-4b5d-41c5-b997-4d2a29a44d01",
+            "name": "run 1k",
+            "points": 10,
+            "completed": false,
+            "dependencies": [
+                "eb8fa1bc-5191-42e6-90c2-d795a2727071"
+            ]
+        },
+        {
+            "id": "c0d91bcc-4e28-480e-b406-5a107927a619",
+            "name": "run 2k",
+            "points": 20,
+            "completed": false,
+            "dependencies": [
+                "c45e5c1b-4b5d-41c5-b997-4d2a29a44d01"
+            ]
+        }
+    ]
+}
