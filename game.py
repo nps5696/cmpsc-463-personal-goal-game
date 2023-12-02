@@ -1,14 +1,14 @@
 import json
-import uuid
 import tkinter as tk
-import numpy as np
+import uuid
 from tkinter import simpledialog, messagebox, StringVar, filedialog
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from game_ui import run_game
-import threading
 
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from game_ui import run_game
 
 graph_window = None
 canvas = None
@@ -16,24 +16,25 @@ ax = None
 
 
 class Task:
-    def __init__(self, name, points, dependencies=[]):
+    def __init__(self, name, points, dependencies=[], completed=False):
         self.id = str(uuid.uuid4())  # Generate a unique ID
         self.name = name
         self.points = points
         self.dependencies = dependencies
-        self.completed = False
+        self.completed = completed
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'points': self.points,
-            'dependencies': self.dependencies
+            'dependencies': self.dependencies,
+            'completed': self.completed
         }
 
     @staticmethod
     def from_dict(data):
-        task = Task(data['name'], data['points'], data['dependencies'])
+        task = Task(data['name'], data['points'], data['dependencies'], data['completed'])
         task.id = data['id']
         return task
 
@@ -182,6 +183,7 @@ def add_task(goals):
                 if task_prereq != "Select Prerequisite Task":
                     new_task = Task(task_name, task_points, [task_prereq])
                     goals.add_task(new_task)
+                    task_window.destroy()
                     messagebox.showinfo("Task Added", f"Task '{task_name}' added successfully!")
                     task_window.destroy()
                 else:
@@ -193,7 +195,7 @@ def add_task(goals):
             # Dropdown for selecting a task
             task_var = StringVar(task_window)
             task_var.set("Select Prerequisite Task")
-            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goal.tasks])
+            task_menu = tk.OptionMenu(task_window, task_var, *["Select Prerequisite Task"] + [task.name for task in goals.tasks])
             task_menu.pack()
 
             # Button to confirm the selection
@@ -283,8 +285,9 @@ def edit_task_dependency(goal):
         selected_task = next((task for task in goal.tasks if task.name == selected_task_name), None)
         if selected_task:
             selected_task.dependencies.append(selected_prereq_name)
-            messagebox.showinfo("Task Updated", f"Prerequisite '{selected_prereq_name}' added to Task '{selected_task_name}'")
             edit_window.destroy()
+            messagebox.showinfo("Task Updated", f"Prerequisite '{selected_prereq_name}' added to Task '{selected_task_name}'")
+            #edit_window.destroy()
 
     edit_window = tk.Toplevel()
     edit_window.title("Edit Task Dependencies")
@@ -365,6 +368,7 @@ def calculate_path(goal, graph_window):
         show_graph(goal, graph_window, path)
         return path
     else:
+        messagebox.showinfo("Finish Task Required", "Finish task has not been set. Please create 'Finish' task.")
         raise ValueError("Start or Finish node not present in the graph")
 
 
@@ -383,9 +387,44 @@ def main():
     label = tk.Label(root, text="")
     label.pack()
 
-    def display_string():
+    def display_manual():
+        formatted_text = """
+        Welcome to the Personal Achievement Game!
+    
+        Follow these steps to play:
+    
+        1. Start by creating a new goal:
+           - Click on 'Add Goal' button.
+           - Enter the goal name and reward.
+    
+        2. Add tasks to the goal:
+           - Click on 'Add Task' button.
+           - Enter the task name and points.
+    
+        3. Set task dependencies:
+           - Click on 'Edit Task Dependency' to specify which tasks need to be completed before others.
+           - Select a task and its prerequisite from the dropdown menus.
+    
+        4. Save your goal:
+           - Click on 'Save Goal' to save your progress.
+    
+        5. Calculate the optimal path:
+           - Click on 'Calculate Path' to find the shortest path from the start to finish tasks.
+    
+        6. Play the game:
+           - Click on 'Play Game' to start the game and complete tasks in the specified order.
+    
+        7. Show progress:
+           - Click on 'Show Progress' to see the progress of completed tasks.
+    
+        Have fun achieving your goals!
+        """
+
         # Update the label's text when the button is clicked
-        label.config(text="Hello There!")
+        label.config(text="Gameplay Manual")
+        text_label = tk.Label(root, text=formatted_text, justify="left", anchor="w", font=("Arial", 12), padx=10, pady=10)
+        text_label.pack()
+
 
     def start_game_and_close_root(root, goals):
         if len(goals) == 0:
@@ -395,20 +434,20 @@ def main():
         run_game(goals[-1])  # Start the Pygame game
 
     # Add buttons and bind them to their respective functions
-    tk.Button(button_frame, text="Add Goal", command=lambda: add_goal(goals), width=button_width).pack()
-    tk.Button(button_frame, text="Add Task", command=lambda: add_task(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Show Progress", command=lambda: display_progress(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Calculate Path", command=lambda: calculate_path(goals[-1] if goals else None, root), width=button_width).pack()
-    # tk.Button(button_frame, text="Update Goal", command=lambda: update_goal(goals), width=button_width).pack()
-    tk.Button(button_frame, text="Show Tasks Graph", command=lambda: show_graph(goals[-1] if goals else None, root), width=button_width).pack()
+    tk.Button(button_frame, text="Show Manual", font=tk.font.Font(size=20), command=display_manual, width=button_width).pack()
+    tk.Button(button_frame, text="Add Goal", font=tk.font.Font(size=20), command=lambda: add_goal(goals), width=button_width).pack()
+    tk.Button(button_frame, text="Add Task", font=tk.font.Font(size=20), command=lambda: add_task(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Show Progress", font=tk.font.Font(size=20), command=lambda: display_progress(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Calculate Path", font=tk.font.Font(size=20), command=lambda: calculate_path(goals[-1] if goals else None, root), width=button_width).pack()
+    tk.Button(button_frame, text="Show Tasks Graph", font=tk.font.Font(size=20), command=lambda: show_graph(goals[-1] if goals else None, root), width=button_width).pack()
     # Add Save and Load buttons
-    tk.Button(button_frame, text="Save Goal", command=lambda: save_goal_as(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Load Goal", command=lambda: goals.append(load_goal_from()), width=button_width).pack()
-    tk.Button(button_frame, text="Click to display string", command=display_string, width=button_width).pack()
-    tk.Button(button_frame, text="Edit Task Dependency", command=lambda: edit_task_dependency(goals[-1] if goals else None), width=button_width).pack()
-    tk.Button(button_frame, text="Play Game", command=lambda: start_game_and_close_root(root, goals), width=button_width).pack()
+    tk.Button(button_frame, text="Save Goal", font=tk.font.Font(size=20), command=lambda: save_goal_as(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Load Goal", font=tk.font.Font(size=20), command=lambda: goals.append(load_goal_from()), width=button_width).pack()
 
+    tk.Button(button_frame, text="Edit Task Dependency", font=tk.font.Font(size=20), command=lambda: edit_task_dependency(goals[-1] if goals else None), width=button_width).pack()
+    tk.Button(button_frame, text="Play Game", font=tk.font.Font(size=20), command=lambda: start_game_and_close_root(root, goals), width=button_width).pack()
 
+    display_manual()
     root.mainloop()
 
 
