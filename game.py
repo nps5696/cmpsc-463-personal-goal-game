@@ -133,9 +133,6 @@ def draw_graph(goal, ax, path):
         pos = nx.spring_layout(graph)
 
 
-    # Draw the graph on the axes
-    # pos = nx.spring_layout(G)
-    # nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=2000, font_size=15, ax=ax)
 
     # Clear the existing plot
     ax.clear()
@@ -307,16 +304,6 @@ def edit_task_dependency(goal):
 
 
 
-
-# def dijkstras_min_points_path(goal):
-#
-#
-# # Example usage
-# # Assuming 'goal' is an instance of Goal with tasks having 'name' and 'points' attributes
-# path = dijkstras_min_points_path(goal)
-# print("Path from Start to Finish with minimum points:", path)
-
-
 def find_case_insensitive_node(G, node_name):
     for node in G.nodes:
         if node.lower() == node_name.lower():
@@ -348,16 +335,7 @@ def calculate_path(goal, graph_window):
     start_node = find_case_insensitive_node(G, "Start")
     finish_node = find_case_insensitive_node(G, "Finish")
 
-    # ###
-    # G = nx.DiGraph()
-    #
-    # # Add nodes and edges based on tasks and their dependencies
-    # for task in goal.tasks:
-    #     G.add_node(task.name)
-    #     if task.dependencies:
-    #         for dep in task.dependencies:
-    #             G.add_edge(dep, task.name)
-    # ###
+
 
     # Check if "Start" and "Finish" nodes exist
     if start_node is not None and finish_node is not None:
