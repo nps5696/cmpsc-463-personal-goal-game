@@ -50,7 +50,7 @@ def run_game(goals):
 
     # Setup sounds
     button_click_sound = pygame.mixer.Sound("sounds/click.mp3")
-    #game_sound = pygame.mixer.Sound("sounds/gameplay.wav")
+
     # Play background music
     pygame.mixer.music.load("sounds/gameplay_2.mp3")
     pygame.mixer.music.play(-1)
@@ -189,8 +189,6 @@ def run_game(goals):
         game_on_rect = game_on_text.get_rect(center=(width // 2, 30))
         screen.blit(game_on_text, game_on_rect)
 
-        ## Get current time in milliseconds
-        #current_time = pygame.time.get_ticks() - start_time
 
         # Convert milliseconds to seconds
         seconds = current_time // 1000
@@ -210,11 +208,7 @@ def run_game(goals):
                 within , circle_center = is_inside_circle(event.pos, circle_centers)
                 if within:
                     button_click_sound.play()
-                    # popup_visible = not popup_visible
-                    # popup_animating = True
-                    # animation_step = 0
-                    # popups = []
-                    #if popup_visible:
+
 
                     # Retrieve the name of the clicked button based on the circle_center
                     clicked_button_name = next_tasks[circle_centers.index(circle_center)]
@@ -234,20 +228,15 @@ def run_game(goals):
                     if next_tasks:
                         for i, next_task in enumerate(next_tasks):
                             print("i:", i)
-                            #current_task = next_task
-                            #circle_center = append.([int(400 - 100 * (i+1)), 450])
-                            #circle_center = circle_centers[i]
-                            #print("center:", circle_center)
+
 
                             circle_centers = draw_buttons(next_tasks)
-                #pygame.display.flip()
 
                 elif popup_visible:
                     for rect in popups:
                         if rect.collidepoint(event.pos):
                             print(f"{popup_options[popups.index(rect)]} clicked!")
 
-        #draw_button(current_task, circle_center)
 
         # Render and display the music toggle button
         pygame.draw.rect(screen, (0, 255, 0), (600, 20, 120, 50))  # Green rectangle as the button
