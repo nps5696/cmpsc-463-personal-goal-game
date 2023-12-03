@@ -13,7 +13,7 @@ The project is significant as it aligns with the concept of Safe Space, providin
 - Install the required dependencies using `pip install -r requirements.txt`.
 
 ### Usage:
-1. Run the main application file (`main.py`) using a Python interpreter.
+1. Run the main application file (`game.py`) using a Python interpreter.
 2. Use the provided GUI to add goals, tasks, and visualize progress.
 3. Save and load goals as needed.
 4. Play the game by starting the Pygame interface.
